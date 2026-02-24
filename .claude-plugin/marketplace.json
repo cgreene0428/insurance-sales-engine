@@ -1,0 +1,46 @@
+{
+  "name": "insurance-sales-engine",
+  "owner": {
+    "name": "Chris Greene — Niche Your Business",
+    "email": "chris@buildinganiche.com"
+  },
+  "metadata": {
+    "description": "Full-lifecycle CRM buildout for P&C insurance agencies using the Trust and Grow Framework, Breakthrough Advertising, Dream 100, and direct response copywriting.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "insurance-sales-engine",
+      "source": "./plugins/insurance-sales-engine",
+      "description": "Full-lifecycle CRM buildout for P&C insurance agencies — works with AgencyZoom. Generates pipelines, workflows, email/text sequences, dashboards, and stage-matched copy with CX/EX dual-lens design.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Chris Greene — Niche Your Business",
+        "email": "chris@buildinganiche.com"
+      },
+      "homepage": "https://www.buildinganiche.com",
+      "license": "MIT",
+      "keywords": [
+        "insurance",
+        "P&C",
+        "sales",
+        "CRM",
+        "pipeline",
+        "automation",
+        "trust-and-grow",
+        "AgencyZoom",
+        "renewal",
+        "onboarding",
+        "service"
+      ],
+      "category": "insurance",
+      "tags": [
+        "insurance-agency",
+        "sales-automation",
+        "pipeline-builder",
+        "CX-EX",
+        "direct-response-copywriting"
+      ]
+    }
+  ]
+}
