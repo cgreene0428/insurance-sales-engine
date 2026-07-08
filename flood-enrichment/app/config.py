@@ -85,13 +85,44 @@ COST_PER_SQFT_BY_STATE = {
     "default": 160,
 }
 
-# NFD constructiondesc is a numeric-ish code; map the common ones you see.
-# Start with a flat 1.0 and refine once you inspect real responses.
+# NFD `constructiondesc` may arrive as a text label ("Wood Frame", "Masonry")
+# or a numeric-ish code. Keys below are matched case-insensitively, first by
+# exact match, then by keyword-substring (so "Masonry/Brick Veneer" -> masonry).
+#
+# BEST-EFFORT STARTER MAP — the exact set of NFD constructiondesc values is not
+# verified here. Once you inspect real responses, add the precise labels/codes
+# you actually see (especially any numeric codes, which only match exactly).
 CONSTRUCTION_FACTOR = {
-    "frame": 1.00,
-    "masonry": 1.10,
+    "frame": 1.00,          # wood frame - baseline
+    "wood": 1.00,
+    "masonry": 1.10,        # masonry / brick
+    "brick": 1.10,
+    "masonry veneer": 1.05,
+    "concrete": 1.15,
+    "steel": 1.20,
+    "fire resistive": 1.25,
+    "manufactured": 0.90,   # manufactured / mobile home
+    "mobile": 0.90,
     "default": 1.00,
 }
+
+
+def construction_factor(desc) -> float:
+    """Resolve an NFD constructiondesc (text label OR numeric code) to a cost
+    factor. Exact case-insensitive match first, then keyword-substring, else
+    DEFAULT. Numeric/int codes only match if present as exact keys above.
+    """
+    if desc is None:
+        return CONSTRUCTION_FACTOR["default"]
+    key = str(desc).strip().lower()
+    if not key:
+        return CONSTRUCTION_FACTOR["default"]
+    if key in CONSTRUCTION_FACTOR:
+        return CONSTRUCTION_FACTOR[key]
+    for token, factor in CONSTRUCTION_FACTOR.items():
+        if token != "default" and token in key:
+            return factor
+    return CONSTRUCTION_FACTOR["default"]
 
 # Extra cost for multi-story complexity.
 def story_factor(stories: float) -> float:
