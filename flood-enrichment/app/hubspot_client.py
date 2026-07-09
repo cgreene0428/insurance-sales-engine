@@ -90,3 +90,45 @@ def write_enrichment(contact_id: str, enriched: dict) -> dict:
             f"write contact {contact_id} -> {resp.status_code}: {resp.text[:300]}"
         )
     return resp.json()
+
+
+# HUBSPOT_DEFINED association type id for Note -> Deal.
+_NOTE_TO_DEAL_ASSOC_TYPE_ID = 214
+
+
+def add_note_to_deal(deal_id: str, body: str) -> dict:
+    """Create a Note engagement with `body` and associate it to a Deal.
+
+    Used to drop the Private Market Flood quote number onto the deal record.
+    Returns the created note object.
+    """
+    if not deal_id:
+        raise HubSpotError("deal_id is required")
+    payload = {
+        "properties": {
+            "hs_note_body": body,
+            # HubSpot requires a timestamp on notes (ISO-8601 UTC accepted).
+            "hs_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        },
+        "associations": [
+            {
+                "to": {"id": str(deal_id)},
+                "types": [
+                    {
+                        "associationCategory": "HUBSPOT_DEFINED",
+                        "associationTypeId": _NOTE_TO_DEAL_ASSOC_TYPE_ID,
+                    }
+                ],
+            }
+        ],
+    }
+    url = f"{config.HUBSPOT_BASE}/crm/v3/objects/notes"
+    try:
+        resp = requests.post(url, headers=_headers(), json=payload, timeout=_TIMEOUT_S)
+    except requests.RequestException as exc:
+        raise HubSpotError(f"create note on deal {deal_id} failed: {exc}") from exc
+    if resp.status_code not in (200, 201):
+        raise HubSpotError(
+            f"create note on deal {deal_id} -> {resp.status_code}: {resp.text[:300]}"
+        )
+    return resp.json()
