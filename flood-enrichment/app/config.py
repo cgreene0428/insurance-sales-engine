@@ -15,6 +15,10 @@ HUBSPOT_ACCESS_TOKEN = os.environ.get("HUBSPOT_ACCESS_TOKEN", "")
 HUBSPOT_WEBHOOK_SECRET = os.environ.get("HUBSPOT_WEBHOOK_SECRET", "")  # app client secret, for signature validation
 NFD_API_KEY = os.environ.get("NFD_API_KEY", "")
 
+# Argenia portal login (set in .env, never hard-code).
+ARGENIA_USERNAME = os.environ.get("ARGENIA_USERNAME", "")
+ARGENIA_PASSWORD = os.environ.get("ARGENIA_PASSWORD", "")
+
 HUBSPOT_BASE = "https://api.hubapi.com"
 NFD_DATA_URL = "https://api.nationalflooddata.com/v3/data"
 
