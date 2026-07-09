@@ -51,10 +51,24 @@ FIXED_UW_ANSWERS = {
 
 
 def risk_type_for_occupancy(occupancy: Optional[str]) -> Optional[str]:
-    """Map an occupancy label to the CRC RISK TYPE option. None if unknown."""
+    """Map a HubSpot 'property type' value to the CRC RISK TYPE option.
+
+    Tolerant of real phrasing ("Primary Residence", "Rental Property",
+    "Secondary/Seasonal"). None if it can't be classified.
+    """
     if not occupancy:
         return None
-    return RISK_TYPE_BY_OCCUPANCY.get(str(occupancy).strip().lower())
+    d = str(occupancy).strip().lower()
+    if d in RISK_TYPE_BY_OCCUPANCY:
+        return RISK_TYPE_BY_OCCUPANCY[d]
+    # Order matters: rule out secondary/rental before the generic owner match.
+    if "second" in d or "seasonal" in d or "vacation" in d:
+        return "Seasonal Occupied Residential"
+    if "rent" in d or "tenant" in d or "investment" in d:
+        return "Tenant/Rental"
+    if "primary" in d or "owner" in d or "residence" in d or "single" in d:
+        return "Owner Occupied Residential"
+    return None
 
 
 def crc_construction(desc) -> Optional[str]:
@@ -95,7 +109,7 @@ def build_quote_inputs(
     contact: dict,
     enriched: dict,
     occupancy: Optional[str],
-    contents_limit,
+    contents_limit=None,
     prior_flood_losses: bool = False,
     foundation_desc: Optional[str] = None,
     effective_date: Optional[str] = None,
@@ -108,6 +122,8 @@ def build_quote_inputs(
     verification. None means "not determined — needs a human or another source".
     """
     building_limit = enriched.get("replacement_cost_est")
+    if contents_limit is None:
+        contents_limit = config.CONTENTS_LIMIT_DEFAULT
     return {
         # Step 2
         "risk_type": risk_type_for_occupancy(occupancy),
@@ -150,6 +166,34 @@ def pick_cheapest(quotes: list) -> Optional[dict]:
     if not valid:
         return None
     return min(valid, key=lambda q: q["premium"])
+
+
+def _usd(v) -> str:
+    if v is None:
+        return "n/a"
+    try:
+        return "${:,.0f}".format(float(v))
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def format_deal_note(chosen: dict, inputs: dict) -> str:
+    """Deal-note body: total premium, coverage amounts, and deductible.
+
+    `chosen` is the pick_cheapest() result; `inputs` is build_quote_inputs().
+    """
+    carrier = (chosen or {}).get("carrier", "selected carrier")
+    return "\n".join(
+        [
+            f"CRC flood quote — {carrier}",
+            f"Total premium: {_usd((chosen or {}).get('total'))}",
+            "Coverage:",
+            f"  Building: {_usd(inputs.get('building_limit'))}",
+            f"  Contents: {_usd(inputs.get('contents_limit'))}",
+            f"  Additional Living Expense: {_usd(inputs.get('additional_living_expense'))}",
+            f"Deductible: {_usd(inputs.get('deductible'))}",
+        ]
+    )
 
 
 # --------------------------------------------------------------------------

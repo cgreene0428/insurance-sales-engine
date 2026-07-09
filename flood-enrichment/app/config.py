@@ -23,6 +23,16 @@ ARGENIA_PASSWORD = os.environ.get("ARGENIA_PASSWORD", "")
 CRC_USERNAME = os.environ.get("CRC_USERNAME", "")
 CRC_PASSWORD = os.environ.get("CRC_PASSWORD", "")
 
+# CRC quote defaults + the HubSpot source properties that feed it.
+CONTENTS_LIMIT_DEFAULT = 100000  # Step 8 Contents Limit
+
+# HubSpot property internal names read to build the CRC quote. CONFIRM these
+# match your portal's actual internal names (Settings -> Properties).
+QUOTE_SOURCE_PROPS = {
+    "property_type": "property_type",      # -> CRC risk type (occupancy)
+    "foundation_type": "foundation_type",  # -> CRC foundation type
+}
+
 HUBSPOT_BASE = "https://api.hubapi.com"
 NFD_DATA_URL = "https://api.nationalflooddata.com/v3/data"
 

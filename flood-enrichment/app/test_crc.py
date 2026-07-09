@@ -21,6 +21,14 @@ def test_risk_type():
     _assert(crc.risk_type_for_occupancy("warehouse") is None, "unknown")
 
 
+def test_risk_type_hubspot_phrasing():
+    # Real HubSpot "property type" values, not just the short keys.
+    _assert(crc.risk_type_for_occupancy("Primary Residence") == "Owner Occupied Residential", "primary res")
+    _assert(crc.risk_type_for_occupancy("Rental Property") == "Tenant/Rental", "rental prop")
+    _assert(crc.risk_type_for_occupancy("Secondary/Seasonal") == "Seasonal Occupied Residential", "secondary")
+    _assert(crc.risk_type_for_occupancy("Investment") == "Tenant/Rental", "investment")
+
+
 def test_construction():
     # veneer must win over the bare "brick" substring
     _assert(crc.crc_construction("Frame with Brick Veneer") == "Brick Veneer", "veneer")
@@ -60,9 +68,8 @@ def test_build_quote_inputs():
         "stories": 2.0, "sqft": 2200.0, "replacement_cost_est": 625000,
     }
     out = crc.build_quote_inputs(
-        contact=contact, enriched=enriched, occupancy="primary",
-        contents_limit=100000, prior_flood_losses=False,
-        foundation_desc="Concrete Slab",
+        contact=contact, enriched=enriched, occupancy="Primary Residence",
+        prior_flood_losses=False, foundation_desc="Concrete Slab",
     )
     _assert(out["risk_type"] == "Owner Occupied Residential", out)
     _assert(out["over_water"] == "No", out)
@@ -70,9 +77,24 @@ def test_build_quote_inputs():
     _assert(out["primary_construction"] == "Frame", out)
     _assert(out["foundation"] == "Slab on Grade", out)
     _assert(out["building_limit"] == 625000, out)
+    _assert(out["contents_limit"] == 100000, "contents defaults to $100k")
     _assert(out["additional_living_expense"] == 62500, out)
     _assert(out["deductible"] == 1000, out)
     _assert(out["flood_zone"] == "AE" and out["construction_year"] == 1998, out)
+
+
+def test_format_deal_note():
+    inputs = {
+        "building_limit": 625000, "contents_limit": 100000,
+        "additional_living_expense": 62500, "deductible": 1000,
+    }
+    chosen = {"carrier": "Company 5", "premium": 1800, "total": 2010}
+    note = crc.format_deal_note(chosen, inputs)
+    _assert("Total premium: $2,010" in note, note)
+    _assert("Building: $625,000" in note, note)
+    _assert("Contents: $100,000" in note, note)
+    _assert("Deductible: $1,000" in note, note)
+    _assert("Company 5" in note, note)
 
 
 if __name__ == "__main__":
