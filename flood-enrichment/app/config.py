@@ -19,6 +19,10 @@ NFD_API_KEY = os.environ.get("NFD_API_KEY", "")
 ARGENIA_USERNAME = os.environ.get("ARGENIA_USERNAME", "")
 ARGENIA_PASSWORD = os.environ.get("ARGENIA_PASSWORD", "")
 
+# CRC Group (agent.crcgroup.com) portal login.
+CRC_USERNAME = os.environ.get("CRC_USERNAME", "")
+CRC_PASSWORD = os.environ.get("CRC_PASSWORD", "")
+
 HUBSPOT_BASE = "https://api.hubapi.com"
 NFD_DATA_URL = "https://api.nationalflooddata.com/v3/data"
 
