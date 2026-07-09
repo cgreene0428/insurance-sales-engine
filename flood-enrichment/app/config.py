@@ -26,9 +26,10 @@ CRC_PASSWORD = os.environ.get("CRC_PASSWORD", "")
 # CRC quote defaults + the HubSpot source properties that feed it.
 CONTENTS_LIMIT_DEFAULT = 100000  # Step 8 Contents Limit
 
-# HubSpot property internal names read to build the CRC quote. CONFIRM these
-# match your portal's actual internal names (Settings -> Properties).
-QUOTE_SOURCE_PROPS = {
+# DEAL property internal names read to build the CRC quote (deal-based trigger).
+# CONFIRM these match your portal's actual internal names (Settings -> Properties).
+DEAL_SOURCE_PROPS = {
+    "address": "flood_risk_address",       # property address to quote/enrich
     "property_type": "property_type",      # -> CRC risk type (occupancy)
     "foundation_type": "foundation_type",  # -> CRC foundation type
 }

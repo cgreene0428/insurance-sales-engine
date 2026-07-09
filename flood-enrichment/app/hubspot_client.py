@@ -92,6 +92,57 @@ def write_enrichment(contact_id: str, enriched: dict) -> dict:
     return resp.json()
 
 
+def _get_contact_name(contact_id: str) -> str:
+    """Read firstname/lastname for a contact and join them."""
+    url = f"{config.HUBSPOT_BASE}/crm/v3/objects/contacts/{contact_id}"
+    try:
+        resp = requests.get(
+            url, headers=_headers(),
+            params={"properties": "firstname,lastname"}, timeout=_TIMEOUT_S,
+        )
+    except requests.RequestException as exc:
+        raise HubSpotError(f"read contact name {contact_id} failed: {exc}") from exc
+    if resp.status_code != 200:
+        raise HubSpotError(
+            f"read contact name {contact_id} -> {resp.status_code}: {resp.text[:300]}"
+        )
+    p = resp.json().get("properties", {}) or {}
+    return " ".join(x for x in (p.get("firstname"), p.get("lastname")) if x).strip()
+
+
+def get_deal_quote_data(deal_id: str) -> dict:
+    """Read the CRC-quote source fields from a deal (deal-based trigger).
+
+    Returns {address, property_type, foundation_type, name} where address/
+    property_type/foundation_type come from deal properties (DEAL_SOURCE_PROPS)
+    and name comes from the deal's primary associated contact.
+    """
+    props = list(config.DEAL_SOURCE_PROPS.values())
+    url = f"{config.HUBSPOT_BASE}/crm/v3/objects/deals/{deal_id}"
+    try:
+        resp = requests.get(
+            url, headers=_headers(),
+            params={"properties": ",".join(props), "associations": "contacts"},
+            timeout=_TIMEOUT_S,
+        )
+    except requests.RequestException as exc:
+        raise HubSpotError(f"read deal {deal_id} failed: {exc}") from exc
+    if resp.status_code != 200:
+        raise HubSpotError(
+            f"read deal {deal_id} -> {resp.status_code}: {resp.text[:300]}"
+        )
+
+    body = resp.json()
+    p = body.get("properties", {}) or {}
+    data = {logical: p.get(hs_name) for logical, hs_name in config.DEAL_SOURCE_PROPS.items()}
+
+    data["name"] = None
+    results = (((body.get("associations") or {}).get("contacts") or {}).get("results") or [])
+    if results and results[0].get("id"):
+        data["name"] = _get_contact_name(results[0]["id"])
+    return data
+
+
 # HUBSPOT_DEFINED association type id for Note -> Deal.
 _NOTE_TO_DEAL_ASSOC_TYPE_ID = 214
 
